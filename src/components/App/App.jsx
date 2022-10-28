@@ -24,12 +24,13 @@ export default function App() {
       return;
     }
     createGallery(page, query);
-  }, [query, page]);
+  }, [page, query]);
 
   const createGallery = async (page, query) => {
     try {
       setIsLoading(true);
       const backendFiles = await fetchImg(page, query);
+
       if (!images.length && backendFiles.totalHits) {
         toast.success(`We found ${backendFiles.totalHits} images for you! 😍`);
       }
