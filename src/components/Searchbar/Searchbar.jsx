@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useState } from 'react';
+
 import { TbSearch } from 'react-icons/tb';
 
 import {
@@ -9,51 +10,47 @@ import {
   SearchFormInput,
 } from './Searchbar.styled';
 
-export default class Searchbar extends Component {
-  state = { query: '' };
+export default function Searchbar({ onSubmit, toast }) {
+  const [query, setQuery] = useState('');
 
-  onChange = e => {
+  const onChange = e => {
     const value = e.target.value.trim().toLowerCase();
-    this.setState({ query: value });
+    setQuery(value);
   };
 
-  reset = () => {
-    this.setState({
-      query: '',
-    });
+  const reset = () => {
+    setQuery('');
   };
 
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
 
-    if (!this.state.query) {
-      this.props.toast('Please write something! 🤨');
+    if (!query) {
+      toast('Please write something! 🤨');
       return;
     }
 
-    this.props.onSubmit(this.state.query);
-    this.reset();
+    onSubmit(query);
+    reset();
   };
 
-  render() {
-    return (
-      <Header>
-        <SearchForm onSubmit={this.handleSubmit}>
-          <SearchFormInput
-            type="text"
-            autocomplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            onChange={this.onChange}
-            value={this.state.query}
-          />
-          <SearchFormBtn type="submit">
-            <TbSearch />
-          </SearchFormBtn>
-        </SearchForm>
-      </Header>
-    );
-  }
+  return (
+    <Header>
+      <SearchForm onSubmit={handleSubmit}>
+        <SearchFormInput
+          type="text"
+          autocomplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          onChange={onChange}
+          value={query}
+        />
+        <SearchFormBtn type="submit">
+          <TbSearch />
+        </SearchFormBtn>
+      </SearchForm>
+    </Header>
+  );
 }
 
 Searchbar.propTypes = {

@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Wrap, ErrorMessage } from './App.styled';
 import Searchbar from 'components/Searchbar/Searchbar';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
@@ -11,92 +11,77 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from 'components/Button/Button';
 
-export default class App extends Component {
-  state = {
-    images: [],
-    page: 1,
-    query: '',
-    errorMessage: null,
-    isLoading: false,
-    total: 0,
-  };
+export default function App() {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [total, setTotal] = useState(0);
 
-  createGallery = async (page, query) => {
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
+    createGallery(page, query);
+  }, [query, page]);
+
+  const createGallery = async (page, query) => {
     try {
-      this.setState({ isLoading: true });
-      const images = await fetchImg(page, query);
-
-      if (!this.state.images.length && images.totalHits) {
-        toast.success(`We found ${images.totalHits} images for you! 😍`);
+      setIsLoading(true);
+      const backendFiles = await fetchImg(page, query);
+      if (!images.length && backendFiles.totalHits) {
+        toast.success(`We found ${backendFiles.totalHits} images for you! 😍`);
       }
 
-      if (!images.totalHits) {
+      if (!backendFiles.totalHits) {
         return toast.error('Sorry, no results for your search. Try again! 😭');
       } else {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...images.hits],
-          total: images.totalHits,
-        }));
+        setImages(prevState => [...prevState, ...backendFiles.hits]);
+        setTotal(backendFiles.totalHits);
       }
     } catch {
-      this.setState({
-        errorMessage: 'Oops, something is wrong 😭 please try again',
-      });
+      setErrorMessage('Oops, something is wrong 😭 please try again');
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  getQuery = query => {
-    if (query === this.state.query) {
+  const getQuery = newQuery => {
+    if (newQuery === query) {
       toast.info('You already see pictures for this query 😊');
       return;
     }
-
-    this.setState({
-      query: query,
-      page: 1,
-      total: 0,
-      images: [],
-    });
+    setQuery(newQuery);
+    setPage(1);
+    setTotal(0);
+    setImages([]);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    ) {
-      this.createGallery(this.state.page, this.state.query);
-    }
-  }
-
-  render() {
-    const { total, isLoading, images, errorMessage } = this.state;
-    return (
-      <Wrap>
-        <Searchbar onSubmit={this.getQuery} toast={toast.warning} />
-        {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
-        <ImageGallery images={images} />
-        {isLoading && <Loader />}
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          limit={3}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
-        {total > images.length && <Button onLoadMore={this.loadMore} />}
-      </Wrap>
-    );
-  }
+  return (
+    <Wrap>
+      <Searchbar onSubmit={getQuery} toast={toast.warning} />
+      {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
+      <ImageGallery images={images} />
+      {isLoading && <Loader />}
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        limit={3}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      {total > images.length && <Button onLoadMore={loadMore} />}
+    </Wrap>
+  );
 }
