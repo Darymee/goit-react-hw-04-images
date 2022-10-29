@@ -10,6 +10,7 @@ export default function Modal({ img, alt, onClose }) {
         onClose();
       }
     };
+
     window.addEventListener('keydown', onEscClick);
 
     return () => {
